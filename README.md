@@ -1,5 +1,9 @@
 # 仿人类小说创作 (Human-Like Novel Writing)
 
+[![GitHub Repo stars](https://img.shields.io/github/stars/LittleLollipop/human-like-novel-workbuddy-skill?style=social)](https://github.com/LittleLollipop/human-like-novel-workbuddy-skill)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-支持作者-ff5f5f?style=flat&logo=ko-fi)](https://ko-fi.com/sai1990)
+
 从根源上解决AI生成痕迹问题，让AI写出具有"人感"的小说。
 
 ## 问题痛点
@@ -279,7 +283,7 @@ MIT License
 
 如果这个技能对你有帮助，请给我一个 Star！
 
-- **GitHub**：（待补充仓库地址后更新）
+- **GitHub**：https://github.com/LittleLollipop/human-like-novel-workbuddy-skill
 - **WorkBuddy 技能市场**：（待发布后更新）
 
 你的 Star 是我持续改进的动力 ❤️
@@ -315,5 +319,5 @@ Sai
 
 ## 发布地址
 
-- **GitHub**：（待发布）
+- **GitHub**：https://github.com/LittleLollipop/human-like-novel-workbuddy-skill
 - **WorkBuddy 技能市场**：（待发布）
