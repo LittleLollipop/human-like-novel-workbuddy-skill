@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.0.0
+version: 2.0.1
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
