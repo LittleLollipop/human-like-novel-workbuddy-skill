@@ -166,25 +166,14 @@
 
 ---
 
-## 五、落盘与输出
+## 五、落盘与输出（主形态=每书独立图数据库）
 
-- **对话日志**：每阶段一文件，原话保留。
-- **设定库**：汇总为 yaml（实体 / 关系 / 约束），示例结构：
+**核心原则**：设定以**图数据库**为唯一真源（组织形式=节点+关系边，按需取关联子图，杜绝「文档一读全读」的噪音稀释）；md 仅作**对话日志/人类可读视图**（非最终产物）。
 
-```yaml
-entities:
-  - id: chen_yan
-    type: 主角
-    attrs: { 出身: 某地散修, 金手指: 读因果, 边界: 不能读死人, 代价: 精血 }
-relations:
-  - { from: chen_yan, to: 某宗, kind: 隶属 }
-constraints:
-  - { target: 某池, 口径: "主效洗髓，对某封算不得对症", 禁用: "专克因果秽气" }
-timeline:
-  - { chapter: 1, event: "首案裁决", state: "主角修为炼气" }
-```
-
-- **写作衔接**：每章开写前，按本章核心实体查询设定库，取出「该实体状态 + 绑定约束 + 关联事件 + 待接钩子」组成注入包（1-3 千字）——设定库全保留，只注入相关子集。
+- **每书一库**：`<项目>/.memory-graph/memory.axeb`（axolotl 图库，经 lobster-memory runner 操作，库路径由 `LOBSTER_MEMORY_DIR` 指定——不同书用不同目录即隔离）。
+- **写入方式**：节点 = 实体/机制/人物（id/label/content/weight），边 = 关系（from/to/kind，kind 用枚举 relates_to/caused/part_of/feedback/derived，具体语义写入边 content）。domain 用 `knowledge`（引擎枚举仅 emotion/knowledge/task，书设定归 knowledge；如需专属 book 域，改引擎 `schema.py` 的 VALID_DOMAINS——小改动，作者定）。
+- **对话日志**：每阶段一文件（md），保留作者原话，作为图的旁证与可读快照。
+- **查询注入**：每章开写前，`recall <本章核心实体关键词>` 取关联子图 → 组装注入包（该实体状态 + 绑定约束 + 关联事件 + 待接钩子，1-3 千字）——设定全保留在图里，只注入相关子集。
 
 ---
 
