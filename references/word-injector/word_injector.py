@@ -138,7 +138,7 @@ def main():
     picked = (two_four + others)[: args.n]
 
     print(f"【词汇注入候选】来源: {' + '.join(srcs)}｜种子 {len(set(seeds))} 个 → 候选 {len(cands)} 个 → 取 {len(picked)}")
-    print("（用法：写 plan 时填【用词注入位】，正文按字数比例自然使用——每约 700 字 1 个）")
+    print("（用法：写 plan 时填【用词注入位】，正文按字数比例自然使用——每约 100 字 1 个）")
     for i, (w, c) in enumerate(picked, 1):
         suffix = f"（词群 {c}）" if args.with_desc else ""
         print(f"{i}. {w}{suffix}")

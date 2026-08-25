@@ -133,7 +133,7 @@ def main():
     picked = picked[: args.n]
 
     print(f"【词汇注入候选·图查询】来源: {' + '.join(srcs)}｜候选 {len(cands)} 个 → 取 {len(picked)}")
-    print("（用法：写 plan 时填【用词注入位】，正文每约 700 字自然用 1 个）")
+    print("（用法：写 plan 时填【用词注入位】，正文每约 100 字自然用 1 个——2026-08-25 用户拍板）")
     for i, (w, h) in enumerate(picked, 1):
         print(f"{i}. {w}（命中 {h}）")
 
