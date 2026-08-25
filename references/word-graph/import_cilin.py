@@ -83,29 +83,30 @@ def main():
                 if mg.add_edge(wid, cid, kind="belongs_to", domain="lexicon"):
                     n_edge += 1
 
-    # 2. 情绪/场景锚点（seed-map → emotion/scene 节点 + seed_of 边）
+    # 2. 维度锚点（seed-map 所有 *_seeds 组 → {前缀}_{子类} 节点 + seed_of 边）
+    #    2026-08-26 泛化：emotion/scene/person/action/env/season/obj/sense 全支持
     with open(SEED_MAP, encoding="utf-8") as f:
         seeds = json.load(f)
-    n_emo = n_scene = n_seed = 0
-    for emo, words in seeds.get("emotion_seeds", {}).items():
-        eid = f"emotion_{emo}"
-        mg.upsert_vertex({"id": eid, "type": "emotion", "status": "live", "domain": "lexicon", "label": f"情绪·{emo}", "emotion": emo})
-        n_emo += 1
-        for w in words:
-            if mg.get_vertex(f"word_{w}") and mg.add_edge(eid, f"word_{w}", kind="seed_of", domain="lexicon"):
-                n_seed += 1
-    for sc, words in seeds.get("scene_seeds", {}).items():
-        sid = f"scene_{sc}"
-        mg.upsert_vertex({"id": sid, "type": "scene", "status": "live", "domain": "lexicon", "label": f"场景·{sc}", "scene": sc})
-        n_scene += 1
-        for w in words:
-            if mg.get_vertex(f"word_{w}") and mg.add_edge(sid, f"word_{w}", kind="seed_of", domain="lexicon"):
-                n_seed += 1
+    n_dim = n_seed = 0
+    for group, subclasses in seeds.items():
+        if not group.endswith("_seeds"):
+            continue
+        prefix = group[:-len("_seeds")]  # emotion/scene/person/action/env/season/obj/sense
+        for sub, words in subclasses.items():
+            nid = f"{prefix}_{sub}"
+            mg.upsert_vertex({
+                "id": nid, "type": prefix, "status": "live", "domain": "lexicon",
+                "label": f"{prefix}·{sub}", "name": sub,
+            })
+            n_dim += 1
+            for w in words:
+                if mg.get_vertex(f"word_{w}") and mg.add_edge(nid, f"word_{w}", kind="seed_of", domain="lexicon"):
+                    n_seed += 1
 
     mg.close()
     size_mb = os.path.getsize(DB) / 1024 / 1024
     print(f"✅ 图库建成: {DB}")
-    print(f"   词节点 {n_word} / 语义类 {n_class} / 情绪 {n_emo} / 场景 {n_scene} / belongs_to 边 {n_edge} / seed_of 边 {n_seed}")
+    print(f"   词节点 {n_word} / 语义类 {n_class} / 维度锚点 {n_dim} / belongs_to 边 {n_edge} / seed_of 边 {n_seed}")
     print(f"   文件大小 {size_mb:.1f} MB")
 
 

@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.3.4
+version: 2.3.5
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -765,11 +765,13 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 > **正解**：写 plan 时用**词图查询器**（`references/word-graph/word_query.py`，词库=axolotl 图数据库，同义词词林扩展版 45k 词入库）按**情绪/场景**检索候选词，把符合的人类常用词**注入 plan 上下文**——attention 拉高这些词的生成概率，模型「被提示」用它们（照抄 chunk 是模型强项，创造 chunk 是弱项）。
 
 **流程**：
-1. **写 plan 时**跑（图查询，直接查图库，无映射表）：`python3 references/word-graph/word_query.py --emotion 温馨,满足 --scene 种田务农 --extra 锄头,垄,畦,草木灰 --n 40`（`--extra`=本章具体名词/人物词/关键词，喂 3 级沾边池）
+1. **写 plan 时**跑（图查询，直接查图库，无映射表）：`python3 references/word-graph/word_query.py --emotion 温馨,满足 --scene 种田务农 --person 外形,神态 --action 手部动作 --env 天气 --season 节气 --obj 农具,家什,食物 --sense 声音,触感 --n 40`
+   - **8 维度锚点**（2026-08-26 全维度盘点后扩展，43 个子类）：`--emotion` 情绪（14）/ `--scene` 场景（9）/ `--person` 人物描写（外形/神态/肤质）/ `--action` 动作行为（手部/脚步/姿态/表情）/ `--env` 环境景致（天气/光影/山水草木）/ `--season` 时令节气（节气/时节/时辰）/ `--obj` 器物衣食（农具/家什/食物/衣物）/ `--sense` 感官声音（声音/气味/触感）
+   - `--extra`=本章自定义词种子（人物专名/书特定词），喂 3 级沾边池
    - 查询路径=纯图：情绪/场景节点 -seed_of→ 种子词 -belongs_to→ 语义类 ←belongs_to- 候选词；命中数=交集加权
    - **三级词池**（2026-08-26 用户拍板，修复「词池单一→该换的词换不进去/情绪词堆砌」）：
-     - **1 级·核心**（情绪+场景交集，命中≥2）：最贴合的少量词——**情绪点缀用，少量**
-     - **2 级·单维**（只中情绪或只中场景，命中==1）：补充候选——按需用，留意漂移词
+     - **1 级·核心**（跨 ≥2 维度，如 情绪×场景、场景×器物）：最贴合的真交集——**点缀用，少量**（2026-08-26 修正：维度多后按「跨维度前缀数」分级，非总命中数）
+     - **2 级·单维**（只跨 1 个维度）：该维度内高频词——补充候选，按需用，留意漂移词
      - **3 级·沾边**（`--extra` 种子扩展：具体名词/人物词/本章关键词）：**正文词汇主体**——具体名词、动作词、场景词都在这里（如 垄/田埂/耘锄/阡陌），**该换进去的词主要靠这级**
    - 兜底备选（文件版）：`references/word-injector/word_injector.py`（词林 txt + 种子映射，无图库环境时用）
 2. 三级都看，**比例上 3 级占大头、1/2 级情绪词只作点缀**（教训：女频 ch1 全用 1 级情绪词→句尾堆砌「踏实，实在，舒心」）；人工挑最贴场景的填进本字段
@@ -783,7 +785,7 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 **与禁词表的关系**：AI 痕迹词库（显然/非常那类）**降级**为次要手段（不再作主力，只兜底）；文言硬错词（尔/汝/岗顶）**照禁**——那是错误不是风格，正向注入与硬错排除不冲突。图库已内置文言缩词 ban 属性（复用 baihua-lexicon，查询时自动排除）。
 
 **词图说明**（`references/word-graph/`）：
-- `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；情绪 14 + 场景 9 锚点（市集/出海/夜袭/酒馆/谈判/破屋/逃命/种田/家务）；句式范式 30）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）+ `python3 import_syntax.py`（句式范式导入）
+- `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；8 维度 43 锚点（情绪14/场景9/人物3/动作4/环境3/时令3/器物4/感官3）；句式范式 30）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）+ `python3 import_syntax.py`（句式范式导入）
 - **可累积**：踩到好词往情绪/场景锚点补 seed_of 边，或往 `word-injector/seed-map.json` 补种子后重导；句式范式往 `syntax-patterns.json` 加后重导
 
 ---
