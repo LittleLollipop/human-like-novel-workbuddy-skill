@@ -97,15 +97,15 @@ def filt(mg, cands):
 
 
 def split_levels(cands):
-    """分级（2026-08-26 用户拍板）：**1 级=情绪×感官交集**（内部感受×身体接收=同一体验两面，人感主要来源）；
-    其余（跨维度但非情绪×感官、单维度）=2 级（消除单调用词）。
-    返回 l1/l2：{词: (情绪命中, 感官命中)} / {词: (跨维度数, 总命中)}"""
+    """分级（2026-08-26 用户拍板）：**1 级=情绪∪感官（并集）**——情绪词与感官词都是人感词（同一体验两面视角），
+    交集不丢词；同时命中情绪+感官（两面都占）者排最前。其余维度=2 级（消除单调用词）。
+    返回 l1/l2：{词: {前缀: 命中}}"""
     l1, l2 = {}, {}
     for w, d in cands.items():
-        if "emotion" in d and "sense" in d:
-            l1[w] = (d.get("emotion", 0), d.get("sense", 0))
+        if "emotion" in d or "sense" in d:
+            l1[w] = d
         else:
-            l2[w] = (len(d), sum(d.values()))
+            l2[w] = d
     return l1, l2
 
 
@@ -164,9 +164,12 @@ def main():
         l1, l2 = split_levels(cands)
         # 稳定排序：跨维度数高/命中多优先（可复现）
         def sk1(item):
-            return (-(item[1][0] * item[1][1]), -item[1][1], item[0])  # 情绪×感官命中积
+            d = item[1]
+            both = 1 if ("emotion" in d and "sense" in d) else 0  # 两面都占排最前
+            return (-both, -sum(d.values()), item[0])
         def sk2(item):
-            return (-item[1][0], -item[1][1], item[0])
+            d = item[1]
+            return (-len(d), -sum(d.values()), item[0])
         l1 = dict(sorted(l1.items(), key=sk1)[: args.n])
         l2 = dict(sorted(l2.items(), key=sk2)[: args.n])
 
@@ -186,14 +189,25 @@ def main():
 
     print(f"【词汇注入候选·三级词池】来源: {' + '.join(srcs) if srcs else '词[直接]'}｜extra: {','.join(extra_seeds) if extra_seeds else '—'}")
     print("（写 plan 填【用词注入位】：1 级核心必用；2 级补充；3 级大池按需——正文每约 20 字自然用 1 个，禁止句尾堆砌同义情绪词）")
+    def dim_tag(d):
+        tags = []
+        if "emotion" in d:
+            tags.append("情")
+        if "sense" in d:
+            tags.append("感")
+        others = [p for p in d if p not in ("emotion", "sense")]
+        if others:
+            tags.append("+".join(others))
+        return "/".join(tags)
+
     if l1:
-        print(f"\n【1 级·人感】（情绪×感官——内部感受×身体接收，人感主要来源）{len(l1)} 个：")
-        for i, (w, h) in enumerate(l1.items(), 1):
-            print(f"  {i}. {w}（情绪命中 {h[0]} / 感官命中 {h[1]}）")
+        print(f"\n【1 级·人感】（情绪∪感官——词内标『情/感』；两面都占排最前）{len(l1)} 个：")
+        for i, (w, d) in enumerate(l1.items(), 1):
+            print(f"  {i}. {w}（{dim_tag(d)}）")
     if l2:
         print(f"\n【2 级·词汇】（其余维度——消除单调用词，非人感）{len(l2)} 个：")
-        for i, (w, h) in enumerate(l2.items(), 1):
-            print(f"  {i}. {w}（跨 {h[0]} 维 / 命中 {h[1]}）")
+        for i, (w, d) in enumerate(l2.items(), 1):
+            print(f"  {i}. {w}（{'/'.join(p for p in d)}）")
     if l3:
         print(f"\n【3 级·沾边】（extra/word 种子扩展——具体名词/人物词/本章关键词）{len(l3)} 个：")
         for i, (w, h) in enumerate(l3.items(), 1):
