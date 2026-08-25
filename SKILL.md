@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.0.1
+version: 2.1.0
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -752,23 +752,27 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 
 ## ★ 用词注入位（每章必填，按字数卡频率——正向词汇供给，治「语体单极化/词汇贫乏」）
 
-> **为什么存在**（2026-08-25 用户洞察，error-case #121 深化）：模型语体单极化——朴实则全程朴实、华丽则全程华丽；大量中文词语（尤其歧义大的）在训练时被**概率稀释**（多义项分摊条件概率，任何语境都不如专一词有竞争力），等价于被边缘化。**负向禁词表只是让用词从 top0 切到 top1/top2，时间长了是另一种 AI 味——要给正确方向的指引，不能只禁错误方向。**
+> **为什么存在**（2026-08-25 用户洞察）：模型语体单极化——朴实则全程朴实、华丽则全程华丽；大量中文词语（尤其歧义大的）在训练时被**概率稀释**（多义项分摊条件概率，任何语境都不如专一词有竞争力），等价于被边缘化。**负向禁词表只是让用词从 top0 切到 top1/top2，时间长了是另一种 AI 味——要给正确方向的指引，不能只禁错误方向。**
 >
-> **正解**：写 plan 时用词汇检索器（`references/word-injector/word_injector.py`，同义词词林扩展版 77k 词为源）按**情绪/场景**检索候选词，把符合的人类常用词**注入 plan 上下文**——attention 拉高这些词的生成概率，模型「被提示」用它们（照抄 chunk 是模型强项，创造 chunk 是弱项）。
+> **正解**：写 plan 时用**词图查询器**（`references/word-graph/word_query.py`，词库=axolotl 图数据库，同义词词林扩展版 45k 词入库）按**情绪/场景**检索候选词，把符合的人类常用词**注入 plan 上下文**——attention 拉高这些词的生成概率，模型「被提示」用它们（照抄 chunk 是模型强项，创造 chunk 是弱项）。
 
 **流程**：
-1. **写 plan 时**跑：`python3 references/word-injector/word_injector.py --emotion 得意,炫耀 --scene 市集买卖 --n 12`
-2. 从候选池**人工挑 5-8 个最贴场景的**填进本字段（漂移词丢掉——词林同群较宽，挑选是流程一部分）
+1. **写 plan 时**跑（图查询，直接查图库，无映射表）：`python3 references/word-graph/word_query.py --emotion 得意,炫耀 --scene 市集买卖 --n 12`
+   - 查询路径=纯图：情绪/场景节点 -seed_of→ 种子词 -belongs_to→ 语义类 ←belongs_to- 候选词；命中数=交集加权，天然压语义漂移
+   - 兜底备选（文件版）：`references/word-injector/word_injector.py`（词林 txt + 种子映射，无图库环境时用）
+2. 从候选池**人工挑 5-8 个最贴场景的**填进本字段（命中数低的漂移词丢掉——挑选是流程一部分）
 3. 正文**按字数比例自然使用**：每约 700 字 1 个（2800 字章=4 个，3500 字=5 个）；不是每句都塞，是「该情绪/场景的段落」自然落词
 4. **selfcheck 校验**：本章注入词清单 → 实际出现 ≥ 字数/700 个；不足=补
 
 **用词注入位**：
 - 本章情绪/场景：<如 得意+市集买卖>
-- 注入词清单：<5-8 个词，如 自得其乐/显摆/得劲/划算/爽快…>
+- 注入词清单：<5-8 个词，如 咋呼/神气/出风头/卖弄/抖威风…>
 
-**与禁词表的关系**：AI 痕迹词库（显然/非常那类）**降级**为次要手段（不再作主力，只兜底）；文言硬错词（尔/汝/岗顶）**照禁**——那是错误不是风格，正向注入与硬错排除不冲突。检索器已内置文言缩词反向过滤（复用 baihua-lexicon）。
+**与禁词表的关系**：AI 痕迹词库（显然/非常那类）**降级**为次要手段（不再作主力，只兜底）；文言硬错词（尔/汝/岗顶）**照禁**——那是错误不是风格，正向注入与硬错排除不冲突。图库已内置文言缩词 ban 属性（复用 baihua-lexicon，查询时自动排除）。
 
-**可累积**：踩到好词往 `word-injector/seed-map.json` 的对应情绪/场景 seeds 加（种子越多检索越准）。
+**词图说明**（`references/word-graph/`）：
+- `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；情绪 14 + 场景 7 锚点）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）
+- **可累积**：踩到好词往情绪/场景锚点补 seed_of 边，或往 `word-injector/seed-map.json` 补种子后重导
 
 ---
 
