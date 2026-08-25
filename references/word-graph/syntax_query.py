@@ -107,7 +107,7 @@ def main():
                     hits[pid] = hits.get(pid, 0) + 1
 
     print(f"【句式注入候选】来源: {' + '.join(srcs)}｜命中 {len(hits)} 个范式")
-    print("（用法：写 plan 时挑 3-5 个填【句式注入位】；每自然段最多 1 种，全章轮换）")
+    print("（用法：写 plan 时按需挑最贴合场景的填【句式注入位】；每自然段最多 1 种特殊句式——2026-08-26 用户拍板，不设数量目标）")
     for pid, h in sorted(hits.items(), key=lambda x: -x[1]):
         p = get_pat(mg, pid)
         print(f"\n■ {p['name']}（命中 {h}）｜{p['formula']}")
