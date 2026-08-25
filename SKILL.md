@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.1.0
+version: 2.2.0
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -771,8 +771,27 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 **与禁词表的关系**：AI 痕迹词库（显然/非常那类）**降级**为次要手段（不再作主力，只兜底）；文言硬错词（尔/汝/岗顶）**照禁**——那是错误不是风格，正向注入与硬错排除不冲突。图库已内置文言缩词 ban 属性（复用 baihua-lexicon，查询时自动排除）。
 
 **词图说明**（`references/word-graph/`）：
-- `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；情绪 14 + 场景 7 锚点）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）
-- **可累积**：踩到好词往情绪/场景锚点补 seed_of 边，或往 `word-injector/seed-map.json` 补种子后重导
+- `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；情绪 14 + 场景 7 锚点；句式范式 30）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）+ `python3 import_syntax.py`（句式范式导入）
+- **可累积**：踩到好词往情绪/场景锚点补 seed_of 边，或往 `word-injector/seed-map.json` 补种子后重导；句式范式往 `syntax-patterns.json` 加后重导
+
+---
+
+## ★ 句式注入位（每章必填，治「句式单极化」——用词注入的同构方案）
+
+> **为什么存在**（2026-08-25 用户提出「同样的方案是不是也能处理句式」）：模型不只词汇贫乏，**句式同样单极化**——总是主谓宾直叙 + 「X说」标签 + 短句堆叠，整章一种骨架。句式是结构层的「词」：可枚举（黄廖《现代汉语》句型/句式/句类/复句四套权威分类）、可注入、few-shot 模仿是模型强项。**给范式+例句，模型照抄结构；不给，它就只会自己的那几套。**
+
+**数据源**（权威转录，非发明）：黄廖《现代汉语》四套分类体系 → `references/word-graph/syntax-patterns.json`（30 个范式）→ 已入图库（pattern_{名} -fits-> emotion_/scene_ 锚点，复用词图情绪/场景）。
+
+**流程**：
+1. **写 plan 时**跑：`python3 references/word-graph/syntax_query.py --emotion 无奈 --scene 谈判要价`（或 `--scene 夜袭战斗`/`--all` 看全表）
+2. 挑 **3-5 个范式**填进本字段（每个带例句——正文直接套用结构）
+3. 正文**按需求使用，每个自然段最多 1 种特殊句式**（用户拍板）；全章 3-5 种轮换，避免整章一种骨架
+4. **selfcheck 校验**：本章至少 3 种注入句式自然落地；整章句式单一（自查相邻段首重复/「X说」标签密度）= 补
+
+**句式注入位**：
+- 本章句式清单：<3-5 个范式，如 转折复句（规矩是铁的，可架不住磨）/条件复句（只要你报备，我就批）/独词短句（……行。）…>
+
+**与用词注入位的关系**：词管「用什么词」，句式管「用什么骨架」——两层互补，写 plan 时一起填，正文按各自频率落地（词=每约 100 字 1 个，句式=每段最多 1 种）。
 
 ---
 
