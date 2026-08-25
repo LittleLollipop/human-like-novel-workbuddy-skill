@@ -97,17 +97,15 @@ def filt(mg, cands):
 
 
 def split_levels(cands):
-    """按跨维度前缀数分级（2026-08-26 修正：锚点多了后总命中数≠跨维度）：
-    跨 ≥2 个维度（如情绪×场景）=1 级核心；只跨 1 个维度=2 级单维。
-    返回 l1/l2：{词: (跨维度数, 维度内总命中)}"""
+    """分级（2026-08-26 用户拍板）：**1 级=情绪×感官交集**（内部感受×身体接收=同一体验两面，人感主要来源）；
+    其余（跨维度但非情绪×感官、单维度）=2 级（消除单调用词）。
+    返回 l1/l2：{词: (情绪命中, 感官命中)} / {词: (跨维度数, 总命中)}"""
     l1, l2 = {}, {}
     for w, d in cands.items():
-        n_dim = len(d)
-        total = sum(d.values())
-        if n_dim >= 2:
-            l1[w] = (n_dim, total)
+        if "emotion" in d and "sense" in d:
+            l1[w] = (d.get("emotion", 0), d.get("sense", 0))
         else:
-            l2[w] = (n_dim, total)
+            l2[w] = (len(d), sum(d.values()))
     return l1, l2
 
 
@@ -166,9 +164,9 @@ def main():
         l1, l2 = split_levels(cands)
         # 稳定排序：跨维度数高/命中多优先（可复现）
         def sk1(item):
-            return (-item[1][0], -item[1][1], item[0])
+            return (-(item[1][0] * item[1][1]), -item[1][1], item[0])  # 情绪×感官命中积
         def sk2(item):
-            return (-item[1][1], item[0])
+            return (-item[1][0], -item[1][1], item[0])
         l1 = dict(sorted(l1.items(), key=sk1)[: args.n])
         l2 = dict(sorted(l2.items(), key=sk2)[: args.n])
 
@@ -189,13 +187,13 @@ def main():
     print(f"【词汇注入候选·三级词池】来源: {' + '.join(srcs) if srcs else '词[直接]'}｜extra: {','.join(extra_seeds) if extra_seeds else '—'}")
     print("（写 plan 填【用词注入位】：1 级核心必用；2 级补充；3 级大池按需——正文每约 20 字自然用 1 个，禁止句尾堆砌同义情绪词）")
     if l1:
-        print(f"\n【1 级·核心】（跨≥2维度，如 情绪×场景）{len(l1)} 个：")
+        print(f"\n【1 级·人感】（情绪×感官——内部感受×身体接收，人感主要来源）{len(l1)} 个：")
         for i, (w, h) in enumerate(l1.items(), 1):
-            print(f"  {i}. {w}（跨 {h[0]} 维）")
+            print(f"  {i}. {w}（情绪命中 {h[0]} / 感官命中 {h[1]}）")
     if l2:
-        print(f"\n【2 级·单维】（只中 1 个维度）{len(l2)} 个：")
+        print(f"\n【2 级·词汇】（其余维度——消除单调用词，非人感）{len(l2)} 个：")
         for i, (w, h) in enumerate(l2.items(), 1):
-            print(f"  {i}. {w}（维度内命中 {h[1]}）")
+            print(f"  {i}. {w}（跨 {h[0]} 维 / 命中 {h[1]}）")
     if l3:
         print(f"\n【3 级·沾边】（extra/word 种子扩展——具体名词/人物词/本章关键词）{len(l3)} 个：")
         for i, (w, h) in enumerate(l3.items(), 1):
