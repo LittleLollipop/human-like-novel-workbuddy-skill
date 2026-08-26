@@ -303,7 +303,38 @@ def _filt_allusion(items, mood=None, scene=None, fam=None, sub=None):
     return out
 
 
-# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
+def fig_idiom(mg, kw=None, n=12, random_=False):
+    """全量成语池（type=idiom，30,895 条）——关键词搜索 word/explanation；--random 随机抽取扩充"""
+    g = mg._g
+    items = []
+    for nid in g.pagerank().keys():
+        v = g.get_vertex(nid)
+        if v and dict(v).get("type") == "idiom":
+            p = gv(mg, dict(v)["id"])
+            if p:
+                items.append(p)
+    if random_:
+        import random
+        random.seed()  # 随机抽取不固定（扩充候选用）
+        picked = random.sample(items, min(n, len(items)))
+        print(f"【全量成语池·随机抽取】{len(picked)} 条（图库，共 {len(items)} 条）")
+    else:
+        picked = []
+        for p in items:
+            hay = (p.get("word", "") or "") + (p.get("explanation", "") or "")
+            if kw and kw in hay:
+                picked.append(p)
+            if len(picked) >= n:
+                break
+        print(f"【全量成语池·搜『{kw}』】{len(picked)} 条（图库，共 {len(items)} 条）")
+    for p in picked:
+        print(f"\n■ {p.get('word','')}｜{p.get('pinyin','')}")
+        print(f"  释义：{p.get('explanation','')[:80]}")
+        if p.get("derivation"):
+            print(f"  出处：{p.get('derivation','')[:60]}")
+
+
+# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
 def file_rhetoric():
     data = load_file("rhetoric.json")
     print(f"【修辞手法】{len(data['rhetorics'])} 格（文件版·陈望道转录）")
@@ -365,6 +396,8 @@ def main():
     ap.add_argument("--ascene", help="典故场景过滤，逗号分隔（市集买卖/夜袭战斗/谈判要价…；--scene 已被场景构建手法占用）")
     ap.add_argument("--fam", choices=["高", "中", "生僻"], help="典故熟悉度过滤")
     ap.add_argument("--sub", choices=["成语典故", "经文名句", "历史典故"], help="典故类型过滤")
+    ap.add_argument("--idiom", metavar="关键词", help="全量成语池搜索（30,895 条，按词/释义搜，如 --idiom 欲速）")
+    ap.add_argument("--random", type=int, metavar="N", help="全量成语池随机抽 N 条（扩充候选，查冷门）")
     ap.add_argument("--master", action="store_true", help="名家风（古龙/金庸/王小波/老舍/汪曾祺）")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
@@ -429,8 +462,14 @@ def main():
         scene = [x.strip() for x in args.ascene.split(",") if x.strip()] if args.ascene else None
         show("allusion", mood, scene, args.fam, args.sub, 12)
         done = True
+    if args.idiom:
+        fig_idiom(mg, args.idiom, 12)
+        done = True
+    if args.random:
+        fig_idiom(mg, n=args.random, random_=True)
+        done = True
     if not done:
-        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy / --punch / --antipattern / --master / --trope / --writing / --allusion 之一")
+        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy / --punch / --antipattern / --master / --trope / --writing / --allusion / --idiom / --random 之一")
 
     if mg is not None:
         mg.close()
