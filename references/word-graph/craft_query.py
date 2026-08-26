@@ -238,7 +238,72 @@ def file_supplement(vtype, src_filter=None):
             print(f"  例：{e}")
 
 
-# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
+def fig_allusion(mg, mood=None, scene=None, fam=None, sub=None, n=None):
+    """图版：典故检索——按情绪/场景/熟悉度/类型过滤"""
+    g = mg._g
+    items = []
+    for nid in g.pagerank().keys():
+        v = g.get_vertex(nid)
+        if v and dict(v).get("type") == "allusion":
+            items.append(gv(mg, dict(v)["id"]))
+    items = _filt_allusion(items, mood, scene, fam, sub)
+    print(f"【通识典故库】{len(items)} 条（图库；mood={mood or '任意'} scene={scene or '任意'} fam={fam or '任意'}）")
+    if n:
+        items = items[:n]
+    for p in items:
+        print(f"\n■ {p['name']}｜{p.get('sub_type','')}｜熟悉度：{p.get('familiarity','中')}")
+        print(f"  出处：{p.get('source','')}")
+        print(f"  故事包：{p.get('story','')}")
+        print(f"  含义：{p.get('meaning','')}")
+        if p.get("note"):
+            print(f"  提示：{p['note']}")
+
+
+def file_allusion(mood=None, scene=None, fam=None, sub=None, n=None):
+    data = load_file("allusion.json")
+    items = _filt_allusion(data.get("allusions", []), mood, scene, fam, sub)
+    print(f"【通识典故库】{len(items)} 条（文件版；mood={mood or '任意'} scene={scene or '任意'} fam={fam or '任意'}）")
+    if n:
+        items = items[:n]
+    for p in items:
+        print(f"\n■ {p['name']}｜{p.get('type','')}｜熟悉度：{p.get('familiarity','中')}")
+        print(f"  出处：{p.get('source','')}")
+        print(f"  故事包：{p.get('story','')}")
+        print(f"  含义：{p.get('meaning','')}")
+        if p.get("note"):
+            print(f"  提示：{p['note']}")
+
+
+def _filt_allusion(items, mood=None, scene=None, fam=None, sub=None):
+    out = []
+    for p in items:
+        if mood:
+            pm = p.get("mood") or []
+            if isinstance(pm, str):
+                try:
+                    pm = json.loads(pm)
+                except Exception:
+                    pm = []
+            if not any(m in pm for m in mood):
+                continue
+        if scene:
+            ps = p.get("scene") or []
+            if isinstance(ps, str):
+                try:
+                    ps = json.loads(ps)
+                except Exception:
+                    ps = []
+            if "任意" not in ps and not any(s in ps for s in scene):
+                continue
+        if fam and p.get("familiarity") != fam:
+            continue
+        if sub and p.get("sub_type", p.get("type")) != sub:
+            continue
+        out.append(p)
+    return out
+
+
+# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
 def file_rhetoric():
     data = load_file("rhetoric.json")
     print(f"【修辞手法】{len(data['rhetorics'])} 格（文件版·陈望道转录）")
@@ -295,6 +360,11 @@ def main():
     ap.add_argument("--source", help="来源过滤，逗号分隔（网文编辑方法论/网文读者共识/老舍/古龙/金庸/王小波/汪曾祺/学院派/特鲁比/沃格勒/莫多克/相声艺术/评书艺术/斯蒂芬·金/麦基/阿城/余华/刘震云/王朔/莫言/詹姆斯·斯科特·贝尔/杰里·克利弗）")
     ap.add_argument("--trope", action="store_true", help="网文流派套路（废柴流/退婚流/签到流/系统流等）")
     ap.add_argument("--writing", action="store_true", help="写作实务（斯蒂芬·金/麦基对白）")
+    ap.add_argument("--allusion", action="store_true", help="通识典故库（成语/经文/历史；配 --mood/--scene/--fam/--sub）")
+    ap.add_argument("--mood", help="典故情绪过滤，逗号分隔（得意/窘迫/恐惧/无奈/满足…）")
+    ap.add_argument("--ascene", help="典故场景过滤，逗号分隔（市集买卖/夜袭战斗/谈判要价…；--scene 已被场景构建手法占用）")
+    ap.add_argument("--fam", choices=["高", "中", "生僻"], help="典故熟悉度过滤")
+    ap.add_argument("--sub", choices=["成语典故", "经文名句", "历史典故"], help="典故类型过滤")
     ap.add_argument("--master", action="store_true", help="名家风（古龙/金庸/王小波/老舍/汪曾祺）")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
@@ -304,11 +374,11 @@ def main():
     def show(kind, *params):
         if mg is not None:
             fig = {"rhetoric": fig_rhetoric, "imagery": fig_imagery,
-                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative, "punch": fig_supplement, "antipattern": fig_supplement, "trope": fig_supplement, "writing": fig_supplement}[kind]
+                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative, "punch": fig_supplement, "antipattern": fig_supplement, "trope": fig_supplement, "writing": fig_supplement, "allusion": fig_allusion}[kind]
             fig(mg, *params)
         else:
             fil = {"rhetoric": file_rhetoric, "imagery": file_imagery,
-                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative, "punch": file_supplement, "antipattern": file_supplement, "trope": file_supplement, "writing": file_supplement}[kind]
+                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative, "punch": file_supplement, "antipattern": file_supplement, "trope": file_supplement, "writing": file_supplement, "allusion": file_allusion}[kind]
             fil(*params)
 
     done = False
@@ -348,8 +418,13 @@ def main():
     if args.writing:
         show("writing", "writing", args.source.split(",") if args.source else None)
         done = True
+    if args.allusion:
+        mood = [x.strip() for x in args.mood.split(",") if x.strip()] if args.mood else None
+        scene = [x.strip() for x in args.ascene.split(",") if x.strip()] if args.ascene else None
+        show("allusion", mood, scene, args.fam, args.sub, 12)
+        done = True
     if not done:
-        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy / --punch / --antipattern / --master / --trope / --writing 之一")
+        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy / --punch / --antipattern / --master / --trope / --writing / --allusion 之一")
 
     if mg is not None:
         mg.close()
