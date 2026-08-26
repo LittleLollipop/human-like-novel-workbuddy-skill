@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.8.2
+version: 2.8.3
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -875,6 +875,7 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 
 **流程**：
 1. **卷/段落图时**：`python3 references/word-graph/craft_query.py --pacing` → 选一个体系做骨架，段 plan 的【分段梗概】对照体系节拍落位（如段=救猫咪缩微：铺垫→催化剂→游戏时间→中点→一无所有→终场）
+   - **⚠️ 选体系必须论证贴合度，禁止默认取第一个（2026-08-26 踩坑：段1 顺手选了救猫咪 15 节拍缩微，但 5 章段丢 10 个节拍=只剩空壳；更正为故事圈 8 步——8 步对 5 章一一映射）**：对照本段弧线形态选——章数少（4-6 章）的段优先故事圈 8 步（每章一步、含归来/改变）；长弧线（卷级）用救猫咪/英雄之旅/特鲁比；中段疲软诊断用三幕。选完在 plan 标注「段X=体系Y，本章=节拍Z」+ 一句为什么（贴合度论证）
 2. **写章节 plan 时**：`--pacing micro` 对照微观规则——钩子/情绪曲线/笑点密度/段落节奏逐条过
 3. **正文落地**：宏观=段弧线方向（写每节时知道自己在弧线的哪个节拍）；微观=章节内节奏执行
 4. **selfcheck 校验**：段末查弧线是否按体系节拍闭合；章末查微观规则（钩子有/情绪有起伏/段落长短交替）
