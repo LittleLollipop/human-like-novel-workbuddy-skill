@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.8.3
+version: 2.8.4
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -826,11 +826,26 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 4. **声口**（voice.json→图库 voice 节点）：通用语气词（应答/惊讶/无奈/催促/抱怨/得意）+ 设计方法（标志性口头禅+语气词区间+句式习惯）
    重建：`python3 import_craft.py`（rhetoric/imagery/transition/voice.json → 图库）
 
+**⚠️ 技法查询强制化（2026-08-27 用户拍板——ch30 定稿后复盘发现战斗章没用上金庸拆招/古龙留白，根因=写 plan 时没跑技法查询，库建了但没进 plan 注入位）**：
+- **写 plan 时按章类型必查对应库**（不是「按需」，是「必查」），结果填进 plan 技法注入位：
+
+| 章类型 | 必查 | 代表技法（技法库按场景标注匹配） |
+|---|---|---|
+| 战斗/动作/紧张章 | `--action` + `--master` | 金庸拆招（见招拆招/攻防往返/关键一招给过程）/古龙留白（短句悬念气氛/一击定胜负留白）/动作分解/力量感/受伤代价 |
+| 情感/氛围/回忆章 | `--master` + `--imagery` | 汪曾祺淡雅/阿城极简/余华冷叙述/物象 |
+| 对话/闲聊/谈判章 | `--dialogue` + `--master` | 刘震云话术/王朔贫嘴/老舍动作带话/潜台词/答非所问 |
+| 喜剧/整活章 | `--comedy` | 相声三翻四抖/误会/立flag打脸 |
+| 开篇/黄金三章 | `--opening` | 冲突开场/快立人物/信息控制 |
+| 悬念/反转章 | `--suspense` | 伏笔埋设/误导/揭晓时机 |
+
+- **plan 技法位必填「本章用哪几个技法 + 在哪个节用」**（如 段落4 决战=金庸拆招（花少×海怪头领攻防往来）+古龙留白（一击定胜负））；**技法位空白=plan 不合格**，正文不得开写
+- selfcheck 加查：plan 技法位列的技法是否真的落地（无=补）
+
 **流程**：
-1. 写 plan 时 `python3 references/word-graph/craft_query.py --rhetoric --imagery 冷,穷 --transition --voice`
-2. 按本章场景/情绪挑：修辞 2-3 格、物象 2-3 个、转场 2-3 种、声口（出场角色定口头禅）填进本字段
+1. 写 plan 时按上表必查对应库（`python3 references/word-graph/craft_query.py --action --master` 等），并按章类型从对应库挑技法填本字段
+2. 修辞/物象/转场/声口按触发位置用（见「技法触发位置表」）
 3. 正文落地：**按触发位置用技法**（转场在切换点/物象在描写处/声口在台词/修辞格在情感氛围幽默点，见「技法触发位置表」）——密度是结果不是目标
-4. **selfcheck 校验**：逐节非白描句子占比≈50%+；场景切换无「突然/就在这时」；角色声口有区分度
+4. **selfcheck 校验**：逐节非白描句子占比≈50%+；场景切换无「突然/就在这时」；角色声口有区分度；**plan 技法位列出的技法全部落地（缺=补）**
 
 ---
 
