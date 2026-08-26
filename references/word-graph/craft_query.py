@@ -127,10 +127,13 @@ def fig_pacing(mg, name=None):
         items = [p for p in items if p.get("name") == name or name in (p.get("label") or "")]
     print(f"【叙事节奏】{len(items)} 个体系（图库）")
     for p in sorted(items, key=lambda x: x.get("name", "")):
-        print(f"\n■ {p.get('label','')}｜层级：{p.get('level','')}")
+        print(f"\n■ {p.get('label','')}｜层级：{p.get('level','')}｜来源：{p.get('source','') or '学院派'}")
+        if p.get("note"):
+            print(f"  注：{p['note']}")
         if p.get("beats"):
             for i, b in enumerate(p["beats"], 1):
-                print(f"  {i}. {b.get('name','')}（{b.get('pos','')}）：{b.get('purpose','')}")
+                pos = b.get("pos", "")
+                print(f"  {i}. {b.get('name','')}{('（'+pos+'）') if pos else ''}：{b.get('purpose','')}")
         if p.get("rules"):
             for r in p["rules"]:
                 print(f"  · {r.get('name','')}：{r.get('rule','')}")
@@ -164,8 +167,10 @@ def _narrative_items(mg, lib=None):
     return items
 
 
-def fig_narrative(mg, lib=None):
+def fig_narrative(mg, lib=None, src_filter=None):
     items = _narrative_items(mg, lib)
+    if src_filter:
+        items = [p for p in items if any(f in (p.get("source") or "") for f in src_filter)]
     label = {"dialogue": "对话技术", "opening": "开篇/黄金三章", "action": "战斗动作",
              "suspense": "悬念反转", "scene": "场景构建", "comedy": "喜剧手法"}.get(lib or "", "叙事手法")
     print(f"【{label}】（图库·{len(items)} 条手法）")
@@ -176,7 +181,7 @@ def fig_narrative(mg, lib=None):
         print(f"  要点：{p.get('note','')}")
 
 
-def file_narrative(lib=None):
+def file_narrative(lib=None, src_filter=None):
     label = {"dialogue": "对话技术", "opening": "开篇/黄金三章", "action": "战斗动作",
              "suspense": "悬念反转", "scene": "场景构建", "comedy": "喜剧手法"}.get(lib or "", "叙事手法")
     libs = [lib] if lib else ["dialogue", "opening", "action", "suspense", "scene", "comedy"]
@@ -184,6 +189,8 @@ def file_narrative(lib=None):
     for l in libs:
         data = load_file(f"{l}.json")
         for t in data.get("techniques", []):
+            if src_filter and not any(f in (t.get("source") or "") for f in src_filter):
+                continue
             print(f"\n■ {t['name']}｜{t.get('formula','')}")
             for e in (t.get("examples") or [])[:2]:
                 print(f"  例：{e}")
@@ -201,7 +208,7 @@ def _sup_items(mg, vtype):
 
 
 def fig_supplement(mg, vtype, src_filter=None):
-    label = {"punch": "爽点引擎", "antipattern": "毒点反例"}.get(vtype, vtype)
+    label = {"punch": "爽点引擎", "antipattern": "毒点反例", "trope": "网文流派套路", "writing": "写作实务"}.get(vtype, vtype)
     items = _sup_items(mg, vtype)
     if src_filter:
         items = [p for p in items if (p.get("source") or "") in src_filter]
@@ -215,12 +222,14 @@ def fig_supplement(mg, vtype, src_filter=None):
 
 
 def file_supplement(vtype, src_filter=None):
-    fn = {"punch": "punch.json", "antipattern": "antipattern.json"}[vtype]
-    key = "antipatterns" if vtype == "antipattern" else "techniques"
+    fn = {"punch": "punch.json", "antipattern": "antipattern.json",
+          "trope": "trope.json", "writing": "writing.json"}[vtype]
+    key = {"antipattern": "antipatterns", "trope": "tropes"}.get(vtype, "techniques")
     data = load_file(fn)[key]
     if src_filter:
-        data = [p for p in data if (p.get("source") or "") in src_filter]
-    label = {"punch": "爽点引擎", "antipattern": "毒点反例"}[vtype]
+        data = [p for p in data if any(f in (p.get("source") or "") for f in src_filter)]
+    label = {"punch": "爽点引擎", "antipattern": "毒点反例",
+             "trope": "网文流派套路", "writing": "写作实务"}[vtype]
     print(f"【{label}】（文件版）")
     for p in data:
         print(f"\n■ {p['name']}｜来源：{p.get('source','')}")
@@ -283,7 +292,9 @@ def main():
     ap.add_argument("--comedy", action="store_true", help="喜剧手法")
     ap.add_argument("--punch", action="store_true", help="爽点引擎（网文编辑方法论）")
     ap.add_argument("--antipattern", action="store_true", help="毒点反例（读者共识）")
-    ap.add_argument("--source", help="来源过滤，逗号分隔（网文编辑方法论/网文读者共识/老舍/古龙/金庸/王小波/汪曾祺/学院派）")
+    ap.add_argument("--source", help="来源过滤，逗号分隔（网文编辑方法论/网文读者共识/老舍/古龙/金庸/王小波/汪曾祺/学院派/特鲁比/沃格勒/莫多克/相声艺术/评书艺术/斯蒂芬·金/麦基/阿城/余华/刘震云/王朔/莫言/詹姆斯·斯科特·贝尔/杰里·克利弗）")
+    ap.add_argument("--trope", action="store_true", help="网文流派套路（废柴流/退婚流/签到流/系统流等）")
+    ap.add_argument("--writing", action="store_true", help="写作实务（斯蒂芬·金/麦基对白）")
     ap.add_argument("--master", action="store_true", help="名家风（古龙/金庸/王小波/老舍/汪曾祺）")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
@@ -293,11 +304,11 @@ def main():
     def show(kind, *params):
         if mg is not None:
             fig = {"rhetoric": fig_rhetoric, "imagery": fig_imagery,
-                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative, "punch": fig_supplement, "antipattern": fig_supplement}[kind]
+                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative, "punch": fig_supplement, "antipattern": fig_supplement, "trope": fig_supplement, "writing": fig_supplement}[kind]
             fig(mg, *params)
         else:
             fil = {"rhetoric": file_rhetoric, "imagery": file_imagery,
-                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative, "punch": file_supplement, "antipattern": file_supplement}[kind]
+                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative, "punch": file_supplement, "antipattern": file_supplement, "trope": file_supplement, "writing": file_supplement}[kind]
             fil(*params)
 
     done = False
@@ -320,7 +331,7 @@ def main():
         done = True
     for lib in ("dialogue", "opening", "action", "suspense", "scene", "comedy"):
         if getattr(args, lib):
-            show("narrative", lib)
+            show("narrative", lib, args.source.split(",") if args.source else None)
             done = True
     if args.punch:
         show("punch", "punch", args.source.split(",") if args.source else None)
@@ -329,10 +340,16 @@ def main():
         show("antipattern", "antipattern", args.source.split(",") if args.source else None)
         done = True
     if args.master:
-        show("narrative", "master_style")
+        show("narrative", "master_style", args.source.split(",") if args.source else None)
+        done = True
+    if args.trope:
+        show("trope", "trope", args.source.split(",") if args.source else None)
+        done = True
+    if args.writing:
+        show("writing", "writing", args.source.split(",") if args.source else None)
         done = True
     if not done:
-        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy 之一")
+        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy / --punch / --antipattern / --master / --trope / --writing 之一")
 
     if mg is not None:
         mg.close()

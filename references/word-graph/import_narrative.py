@@ -33,6 +33,7 @@ def main():
                 "id": pid, "type": "narrative", "status": "live", "domain": "lexicon",
                 "label": f"{LABELS[lib]}·{t['name']}", "lib": lib, "name": t["name"],
                 "formula": t.get("formula", ""),
+                "source": t.get("source", ""),
                 "examples": json.dumps(t.get("examples", []), ensure_ascii=False),
                 "scene": json.dumps(t.get("scene", []), ensure_ascii=False),
                 "note": t.get("note", ""),

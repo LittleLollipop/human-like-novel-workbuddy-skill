@@ -74,5 +74,78 @@ def main():
     print(f"✅ 补充库导入完成: {n} 节点（punch {len(json.load(open(os.path.join(HERE,'punch.json'), encoding='utf-8'))['techniques'])} / antipattern {len(json.load(open(os.path.join(HERE,'antipattern.json'), encoding='utf-8'))['antipatterns'])} / master {len(json.load(open(os.path.join(HERE,'master_style.json'), encoding='utf-8'))['techniques'])}）")
 
 
+
+def _extra():
+    """扩展：trope/writing 两库（2026-08-26 第二轮）"""
+    mg = MemoryGraph(DB)
+    n = 0
+    # trope（网文流派套路，source=网文读者共识）
+    with open(os.path.join(HERE, "trope.json"), encoding="utf-8") as f:
+        data = json.load(f)
+    for t in data.get("tropes", []):
+        mg.upsert_vertex({
+            "id": f"trope_{t['name']}", "type": "trope", "status": "live", "domain": "lexicon",
+            "label": f"流派·{t['name']}", "name": t["name"],
+            "source": t.get("source", "网文读者共识"),
+            "formula": t.get("formula", ""),
+            "examples": json.dumps(t.get("examples", []), ensure_ascii=False),
+            "scene": json.dumps(t.get("scene", []), ensure_ascii=False),
+            "note": t.get("note", ""),
+        })
+        n += 1
+    # writing（作家实务：斯蒂芬·金/麦基对白）
+    with open(os.path.join(HERE, "writing.json"), encoding="utf-8") as f:
+        data = json.load(f)
+    for t in data.get("techniques", []):
+        mg.upsert_vertex({
+            "id": f"writing_{t['name']}", "type": "writing", "status": "live", "domain": "lexicon",
+            "label": f"写作实务·{t['name']}", "name": t["name"],
+            "source": t.get("source", "作家实务"),
+            "formula": t.get("formula", ""),
+            "examples": json.dumps(t.get("examples", []), ensure_ascii=False),
+            "scene": json.dumps(t.get("scene", []), ensure_ascii=False),
+            "note": t.get("note", ""),
+        })
+        n += 1
+    mg.close()
+    print(f"✅ 补充库扩展导入完成: {n} 节点（trope {len(json.load(open(os.path.join(HERE,'trope.json'),encoding='utf-8')).get('tropes',[]))} + writing {len(json.load(open(os.path.join(HERE,'writing.json'),encoding='utf-8')).get('techniques',[]))}）")
+
+
 if __name__ == "__main__":
     main()
+    _extra()
+
+def _extra():
+    """扩展：trope/writing 两库（2026-08-26 第二轮）"""
+    mg = MemoryGraph(DB)
+    n = 0
+    # trope（网文流派套路，source=网文读者共识）
+    with open(os.path.join(HERE, "trope.json"), encoding="utf-8") as f:
+        data = json.load(f)
+    for t in data.get("tropes", []):
+        mg.upsert_vertex({
+            "id": f"trope_{t['name']}", "type": "trope", "status": "live", "domain": "lexicon",
+            "label": f"流派·{t['name']}", "name": t["name"],
+            "source": t.get("source", "网文读者共识"),
+            "formula": t.get("formula", ""),
+            "examples": json.dumps(t.get("examples", []), ensure_ascii=False),
+            "scene": json.dumps(t.get("scene", []), ensure_ascii=False),
+            "note": t.get("note", ""),
+        })
+        n += 1
+    # writing（作家实务：斯蒂芬·金/麦基对白）
+    with open(os.path.join(HERE, "writing.json"), encoding="utf-8") as f:
+        data = json.load(f)
+    for t in data.get("techniques", []):
+        mg.upsert_vertex({
+            "id": f"writing_{t['name']}", "type": "writing", "status": "live", "domain": "lexicon",
+            "label": f"写作实务·{t['name']}", "name": t["name"],
+            "source": t.get("source", "作家实务"),
+            "formula": t.get("formula", ""),
+            "examples": json.dumps(t.get("examples", []), ensure_ascii=False),
+            "scene": json.dumps(t.get("scene", []), ensure_ascii=False),
+            "note": t.get("note", ""),
+        })
+        n += 1
+    mg.close()
+    print(f"✅ 补充库扩展导入完成: {n} 节点（trope {len(json.load(open(os.path.join(HERE,'trope.json'),encoding='utf-8')).get('tropes',[]))} + writing {len(json.load(open(os.path.join(HERE,'writing.json'),encoding='utf-8')).get('techniques',[]))}）")

@@ -30,6 +30,8 @@ def main():
             "id": f"pacing_{key}", "type": "pacing", "status": "live", "domain": "lexicon",
             "label": sysinfo["label"], "name": key,
             "level": sysinfo.get("level", ""),
+            "source": sysinfo.get("source", ""),
+            "note": sysinfo.get("note", ""),
             "beats": json.dumps(sysinfo.get("beats", []), ensure_ascii=False),
         })
         n += 1
