@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""词汇检索器（word-injector）：按情绪/场景从同义词词林扩展版检索候选用词。
+"""词汇检索器（word-injector）——⛔ 已禁用（2026-08-26 用户拍板：必须用图库，读 txt/JSON 全量进上下文=注意力分散）。请用 references/word-graph/word_query.py（图库版）。
 
 用法:
     python3 word_injector.py --emotion 得意,炫耀 --scene 市集买卖 --n 12

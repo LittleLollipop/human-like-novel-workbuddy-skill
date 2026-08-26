@@ -369,7 +369,13 @@ def main():
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
 
-    mg = None if args.file else get_graph()
+    if args.file:
+        print("⛔ 文件版已禁用（2026-08-26 用户拍板：读 JSON 全量进上下文=注意力分散）。必须用图库。", file=sys.stderr)
+        sys.exit(1)
+    mg = get_graph()
+    if mg is None:
+        print(f"⛔ 图库打不开（{DB}）——必须用图库，禁止文件版兜底。请先运行 import_cilin.py/import_allusion.py 等建库。", file=sys.stderr)
+        sys.exit(1)
 
     def show(kind, *params):
         if mg is not None:
