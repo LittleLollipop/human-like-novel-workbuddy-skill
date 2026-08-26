@@ -1,18 +1,26 @@
 {
   "name": "human-like-novel",
-  "version": "2.0.1",
+  "version": "2.6.0",
   "display_name": "仿人类小说创作",
   "display_name_en": "Human-Like Novel Writing",
-  "description": "从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统、引用触发机制，让AI写出具有'人感'的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。",
-  "description_zh": "仿人类小说创作技能，根治AI生成痕迹（重复、节奏单一、用词单调、精确数字），支持旁征博引和流行文化引用，让AI写出有人感的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。",
-  "description_en": "Human-like novel writing skill that eliminates AI fingerprints (repetition, uniform rhythm, monotonous wording, precise numbers). Features emotion word library, setting example library, chapter three-element plan, negative constraint system, and citation trigger mechanism. Built-in lightweight graph-data source-of-truth approach for long-form novel consistency via knowledge graph.",
+  "description": "从根源上解决AI生成痕迹问题。v2.6.0 正向注入体系七层全景：词（词林三级池）/句式（黄廖）/引用（素材库）/技法（修辞物象转场声口）/节奏（救猫咪等六体系+微观规则）/叙事手法（对话开篇战斗悬念场景喜剧）/负面约束护栏。内置词图素材库（axolotl）+ 图数据设定真源，解决长篇一致性。",
+  "description_zh": "仿人类小说创作，根治AI生成痕迹。v2.6.0 正向注入体系：词/句式/引用/技法/节奏/叙事手法六层注入+负面约束护栏；内置词图素材库与图数据设定真源，解决长篇一致性。",
+  "description_en": "Human-like novel writing skill. v2.6.0 positive-injection system: words/syntax/citations/craft/pacing/narrative techniques + negative constraints; built-in lexicon graph DB + graph data source-of-truth for long-form consistency.",
   "visibility": "public",
   "author": "Sai",
   "license": "MIT",
-  "tags": ["novel", "writing", "anti-ai", "human-like", "fiction", "creative-writing", "lightweight"],
+  "tags": [
+    "novel",
+    "writing",
+    "anti-ai",
+    "human-like",
+    "fiction",
+    "creative-writing",
+    "lightweight"
+  ],
   "dependencies": [],
   "repository": "https://github.com/LittleLollipop/human-like-novel-workbuddy-skill",
   "homepage": "",
   "created_at": "2026-07-03",
-  "updated_at": "2026-08-14"
+  "updated_at": "2026-08-26"
 }
