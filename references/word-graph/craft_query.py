@@ -116,6 +116,42 @@ def fig_voice(mg):
         print(f"  {k}：{v}")
 
 
+def fig_pacing(mg, name=None):
+    g = mg._g
+    items = []
+    for nid in g.pagerank().keys():
+        v = g.get_vertex(nid)
+        if v and dict(v).get("type") == "pacing":
+            items.append(gv(mg, dict(v)["id"]))
+    if name:
+        items = [p for p in items if p.get("name") == name or name in (p.get("label") or "")]
+    print(f"【叙事节奏】{len(items)} 个体系（图库）")
+    for p in sorted(items, key=lambda x: x.get("name", "")):
+        print(f"\n■ {p.get('label','')}｜层级：{p.get('level','')}")
+        if p.get("beats"):
+            for i, b in enumerate(p["beats"], 1):
+                print(f"  {i}. {b.get('name','')}（{b.get('pos','')}）：{b.get('purpose','')}")
+        if p.get("rules"):
+            for r in p["rules"]:
+                print(f"  · {r.get('name','')}：{r.get('rule','')}")
+
+
+def file_pacing(name=None):
+    data = load_file("pacing.json")
+    items = []
+    for key, s in data["macro"].items():
+        if not name or name in key or name in s["label"]:
+            items.append((s["label"], s.get("level", ""), s.get("beats", [])))
+    if not name or "micro" in name or not items:
+        m = data.get("micro", {})
+        items.append((m.get("label", "章节级节奏规则"), "chapter", []))
+    print(f"【叙事节奏】（文件版）{len(items)} 个体系")
+    for label, level, beats in items:
+        print(f"\n■ {label}｜层级：{level}")
+        for i, b in enumerate(beats, 1):
+            print(f"  {i}. {b.get('name','')}（{b.get('pos','')}）：{b.get('purpose','')}")
+
+
 # ── 文件版（兜底） ───────────────────────────────────
 def file_rhetoric():
     data = load_file("rhetoric.json")
@@ -161,6 +197,7 @@ def main():
     ap.add_argument("--imagery", nargs="?", const="", help="物象查询，逗号分隔（空=全表）")
     ap.add_argument("--transition", action="store_true", help="全部转场手法")
     ap.add_argument("--voice", action="store_true", help="声口语料")
+    ap.add_argument("--pacing", nargs="?", const="", help="叙事节奏体系（救猫咪/故事圈/三幕/七点/弗莱塔格/英雄之旅/微观；空=全部）")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
 
@@ -169,11 +206,11 @@ def main():
     def show(kind, *params):
         if mg is not None:
             fig = {"rhetoric": fig_rhetoric, "imagery": fig_imagery,
-                   "transition": fig_transition, "voice": fig_voice}[kind]
+                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing}[kind]
             fig(mg, *params)
         else:
             fil = {"rhetoric": file_rhetoric, "imagery": file_imagery,
-                   "transition": file_transition, "voice": file_voice}[kind]
+                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing}[kind]
             fil(*params)
 
     done = False
@@ -191,8 +228,11 @@ def main():
     if args.voice:
         show("voice")
         done = True
+    if args.pacing is not None:
+        show("pacing", args.pacing or None)
+        done = True
     if not done:
-        ap.error("至少给 --rhetoric / --imagery / --transition / --voice 之一")
+        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing 之一")
 
     if mg is not None:
         mg.close()
