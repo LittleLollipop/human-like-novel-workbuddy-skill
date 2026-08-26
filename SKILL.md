@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.4.0
+version: 2.4.1
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -814,11 +814,12 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 
 > **为什么存在**（2026-08-26 用户：「除了词语和句式以外，是不是还有其他的方面也可以这样处理？比如修辞手法」——正向注入是通用机制：凡「可枚举素材 + 模型用不好」的层面都能套）。词管血肉、句式管骨架、引用管人味、**技法管手法**——修辞治比喻套路化、物象治描写空泛、转场治过渡生硬、声口治角色一个调。
 
-**四库**（`references/word-graph/`，查询：`python3 craft_query.py --rhetoric/--imagery/--transition/--voice`）：
-1. **修辞**（rhetoric.json，陈望道《修辞学发凡》转录 12 格）：比喻/拟人/夸张/通感/排比/借代/反复/反问/设问/对比/双关/反语——每格=结构+去套路化范例+频率（**调味级：每章 2-4 处、同类≤2 处**，防油滑）
-2. **物象**（imagery.json，14 类场景/情绪→具体物象）：写『冷』不写冷，写 霜花/白气/冻裂的缸沿——治描写空泛
-3. **转场**（transition.json，8 种）：对话/物件/声音/时间/省略/动作/事件/情绪转场——替代「突然/就在这时」
-4. **声口**（voice.json）：通用语气词（应答/惊讶/无奈/催促/抱怨/得意）+ 设计方法（标志性口头禅+语气词区间+句式习惯）
+**四库**（`references/word-graph/`，**图库为主**（2026-08-26 用户拍板：技法库也主推图库，无图库时文件兜底）；查询 `python3 craft_query.py --rhetoric/--imagery/--transition/--voice`，`--file` 强制文件版）：
+1. **修辞**（rhetoric.json→图库 rhetoric_{名}，陈望道《修辞学发凡》转录 12 格）：比喻/拟人/夸张/通感/排比/借代/反复/反问/设问/对比/双关/反语——每格=结构+去套路化范例+频率（**调味级：每章 2-4 处、同类≤2 处**，防油滑）；-fits-> 情绪/场景锚点可过滤
+2. **物象**（imagery.json→图库 imagery_{场景}，14 类场景/情绪→具体物象）：写『冷』不写冷，写 霜花/白气/冻裂的缸沿——治描写空泛
+3. **转场**（transition.json→图库 transition_{名}，8 种）：对话/物件/声音/时间/省略/动作/事件/情绪转场——替代「突然/就在这时」
+4. **声口**（voice.json→图库 voice 节点）：通用语气词（应答/惊讶/无奈/催促/抱怨/得意）+ 设计方法（标志性口头禅+语气词区间+句式习惯）
+   重建：`python3 import_craft.py`（rhetoric/imagery/transition/voice.json → 图库）
 
 **流程**：
 1. 写 plan 时 `python3 references/word-graph/craft_query.py --rhetoric --imagery 冷,穷 --transition --voice`
