@@ -152,7 +152,45 @@ def file_pacing(name=None):
             print(f"  {i}. {b.get('name','')}（{b.get('pos','')}）：{b.get('purpose','')}")
 
 
-# ── 文件版（兜底） ───────────────────────────────────
+def _narrative_items(mg, lib=None):
+    g = mg._g
+    items = []
+    for nid in g.pagerank().keys():
+        v = g.get_vertex(nid)
+        if v and dict(v).get("type") == "narrative":
+            p = gv(mg, dict(v)["id"])
+            if not lib or p.get("lib") == lib:
+                items.append(p)
+    return items
+
+
+def fig_narrative(mg, lib=None):
+    items = _narrative_items(mg, lib)
+    label = {"dialogue": "对话技术", "opening": "开篇/黄金三章", "action": "战斗动作",
+             "suspense": "悬念反转", "scene": "场景构建", "comedy": "喜剧手法"}.get(lib or "", "叙事手法")
+    print(f"【{label}】（图库·{len(items)} 条手法）")
+    for p in sorted(items, key=lambda x: x.get("name", "")):
+        print(f"\n■ {p['name']}｜{p.get('formula','')}")
+        for e in (p.get("examples") or [])[:2]:
+            print(f"  例：{e}")
+        print(f"  要点：{p.get('note','')}")
+
+
+def file_narrative(lib=None):
+    label = {"dialogue": "对话技术", "opening": "开篇/黄金三章", "action": "战斗动作",
+             "suspense": "悬念反转", "scene": "场景构建", "comedy": "喜剧手法"}.get(lib or "", "叙事手法")
+    libs = [lib] if lib else ["dialogue", "opening", "action", "suspense", "scene", "comedy"]
+    print(f"【{label}】（文件版）")
+    for l in libs:
+        data = load_file(f"{l}.json")
+        for t in data.get("techniques", []):
+            print(f"\n■ {t['name']}｜{t.get('formula','')}")
+            for e in (t.get("examples") or [])[:2]:
+                print(f"  例：{e}")
+            print(f"  要点：{t.get('note','')}")
+
+
+# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
 def file_rhetoric():
     data = load_file("rhetoric.json")
     print(f"【修辞手法】{len(data['rhetorics'])} 格（文件版·陈望道转录）")
@@ -198,6 +236,12 @@ def main():
     ap.add_argument("--transition", action="store_true", help="全部转场手法")
     ap.add_argument("--voice", action="store_true", help="声口语料")
     ap.add_argument("--pacing", nargs="?", const="", help="叙事节奏体系（救猫咪/故事圈/三幕/七点/弗莱塔格/英雄之旅/微观；空=全部）")
+    ap.add_argument("--dialogue", action="store_true", help="对话技术手法")
+    ap.add_argument("--opening", action="store_true", help="开篇/黄金三章手法")
+    ap.add_argument("--action", action="store_true", help="战斗动作手法")
+    ap.add_argument("--suspense", action="store_true", help="悬念反转手法")
+    ap.add_argument("--scene", action="store_true", help="场景构建手法")
+    ap.add_argument("--comedy", action="store_true", help="喜剧手法")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
 
@@ -206,11 +250,11 @@ def main():
     def show(kind, *params):
         if mg is not None:
             fig = {"rhetoric": fig_rhetoric, "imagery": fig_imagery,
-                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing}[kind]
+                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative}[kind]
             fig(mg, *params)
         else:
             fil = {"rhetoric": file_rhetoric, "imagery": file_imagery,
-                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing}[kind]
+                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative}[kind]
             fil(*params)
 
     done = False
@@ -231,8 +275,12 @@ def main():
     if args.pacing is not None:
         show("pacing", args.pacing or None)
         done = True
+    for lib in ("dialogue", "opening", "action", "suspense", "scene", "comedy"):
+        if getattr(args, lib):
+            show("narrative", lib)
+            done = True
     if not done:
-        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing 之一")
+        ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy 之一")
 
     if mg is not None:
         mg.close()
