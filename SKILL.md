@@ -3,7 +3,7 @@ name: human-like-novel
 description: 仿人类小说创作技能，从根源上解决AI生成痕迹问题（重复描写、节奏单一、用词单调、精确数字）。通过情绪词库、设定点范例库、章节三要素计划、负面约束系统，让AI写出具有"人感"的小说。内置轻量级图数据设定真源方案，以知识图谱解决长篇小说长期一致性。
 description_zh: "仿人类小说创作，根治AI生成痕迹，让AI写出有人感的小说；内置轻量级图数据设定真源方案"
 description_en: "Human-like novel writing skill that eliminates AI fingerprints from generated text; built-in lightweight graph-data source-of-truth for long-form consistency"
-version: 2.6.8
+version: 2.6.9
 display_name: "仿人类小说创作"
 display_name_en: "Human-Like Novel Writing"
 visibility: "public"
@@ -886,6 +886,14 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 4. **悬念反转**（suspense.json，9 条）：伏笔埋设/回收/误导/反转铺垫/信息顺序/悬念密度/升级悬念/揭晓时机/余味——治「伏笔不收反转没铺垫」（与项目伏笔表配合）
 5. **场景构建**（scene.json，8 条，麦基《故事》）：场景目标/价值转变/入场/退场/转折/节奏/串联/省略——治「场景没功能」（**核心：一个场景=一个价值转变，没转变=删**）
 6. **喜剧手法**（comedy.json，10 条）：误会/错位/一本正经/重复升级/意外加合理/立flag打脸/自嘲/夸张反应/冷幽默/反讽——治「有梗但手法单一」（与整活梗库配合）
+
+**非学院派补充库**（2026-08-26 用户：不局限学院派；**全部带 source 来源标注，写严肃文学时按来源筛选**）：
+7. **爽点引擎**（punch.json，8 条，source=网文编辑方法论）：期待-满足循环/打脸/扮猪吃虎/收获/代入感（欲望投射+视角锁定）/即时反馈/危机转机——**网文命脉，学院派不教**
+8. **毒点反例**（antipattern.json，8 条，source=网文读者共识）：水剧情/降智/圣母/金手指通胀/无脑装逼/剧情拖沓/主角无成长/吃书——「不要什么」的判断标准，selfcheck 查毒点
+9. **名家风**（master_style.json，5 条，source=古龙/金庸/王小波/老舍/汪曾祺）：古龙留白/金庸拆招/王小波荒谬/老舍白描/汪曾祺淡雅——从作品总结的风格技法（可查作品验证）
+10. **老舍白话句式**（syntax-patterns.json 补充 4 式，source=老舍）：动作带话/京味语气词/口语断言/白话白描
+
+**来源筛选**（查询 `craft_query.py --source 学院派,古龙,金庸…`）：每条素材带 source 字段——网文实战来源（网文编辑方法论/网文读者共识）在严肃文学写作时排除，学院派+名家保留。
 
 **流程**：
 1. 写 plan 时按本章场景查对应库（`--dialogue` 对话多的章/`--action` 战斗章/`--comedy` 喜剧章…）

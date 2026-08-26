@@ -190,7 +190,46 @@ def file_narrative(lib=None):
             print(f"  要点：{t.get('note','')}")
 
 
-# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
+def _sup_items(mg, vtype):
+    g = mg._g
+    items = []
+    for nid in g.pagerank().keys():
+        v = g.get_vertex(nid)
+        if v and dict(v).get("type") == vtype:
+            items.append(gv(mg, dict(v)["id"]))
+    return items
+
+
+def fig_supplement(mg, vtype, src_filter=None):
+    label = {"punch": "爽点引擎", "antipattern": "毒点反例"}.get(vtype, vtype)
+    items = _sup_items(mg, vtype)
+    if src_filter:
+        items = [p for p in items if (p.get("source") or "") in src_filter]
+    print(f"【{label}】（图库·{len(items)} 条，source 标注）")
+    for p in sorted(items, key=lambda x: x.get("name", "")):
+        print(f"\n■ {p['name']}｜来源：{p.get('source','')}")
+        print(f"  {p.get('formula','')}")
+        for e in (p.get("examples") or [])[:2]:
+            print(f"  例：{e}")
+        print(f"  要点：{p.get('note','')}")
+
+
+def file_supplement(vtype, src_filter=None):
+    fn = {"punch": "punch.json", "antipattern": "antipattern.json"}[vtype]
+    key = "antipatterns" if vtype == "antipattern" else "techniques"
+    data = load_file(fn)[key]
+    if src_filter:
+        data = [p for p in data if (p.get("source") or "") in src_filter]
+    label = {"punch": "爽点引擎", "antipattern": "毒点反例"}[vtype]
+    print(f"【{label}】（文件版）")
+    for p in data:
+        print(f"\n■ {p['name']}｜来源：{p.get('source','')}")
+        print(f"  {p.get('formula','')}")
+        for e in (p.get("examples") or [])[:2]:
+            print(f"  例：{e}")
+
+
+# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────# ── 文件版（兜底） ───────────────────────────────────
 def file_rhetoric():
     data = load_file("rhetoric.json")
     print(f"【修辞手法】{len(data['rhetorics'])} 格（文件版·陈望道转录）")
@@ -242,6 +281,10 @@ def main():
     ap.add_argument("--suspense", action="store_true", help="悬念反转手法")
     ap.add_argument("--scene", action="store_true", help="场景构建手法")
     ap.add_argument("--comedy", action="store_true", help="喜剧手法")
+    ap.add_argument("--punch", action="store_true", help="爽点引擎（网文编辑方法论）")
+    ap.add_argument("--antipattern", action="store_true", help="毒点反例（读者共识）")
+    ap.add_argument("--source", help="来源过滤，逗号分隔（网文编辑方法论/网文读者共识/老舍/古龙/金庸/王小波/汪曾祺/学院派）")
+    ap.add_argument("--master", action="store_true", help="名家风（古龙/金庸/王小波/老舍/汪曾祺）")
     ap.add_argument("--file", action="store_true", help="强制文件版（兜底）")
     args = ap.parse_args()
 
@@ -250,11 +293,11 @@ def main():
     def show(kind, *params):
         if mg is not None:
             fig = {"rhetoric": fig_rhetoric, "imagery": fig_imagery,
-                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative}[kind]
+                   "transition": fig_transition, "voice": fig_voice, "pacing": fig_pacing, "narrative": fig_narrative, "punch": fig_supplement, "antipattern": fig_supplement}[kind]
             fig(mg, *params)
         else:
             fil = {"rhetoric": file_rhetoric, "imagery": file_imagery,
-                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative}[kind]
+                   "transition": file_transition, "voice": file_voice, "pacing": file_pacing, "narrative": file_narrative, "punch": file_supplement, "antipattern": file_supplement}[kind]
             fil(*params)
 
     done = False
@@ -279,6 +322,15 @@ def main():
         if getattr(args, lib):
             show("narrative", lib)
             done = True
+    if args.punch:
+        show("punch", "punch", args.source.split(",") if args.source else None)
+        done = True
+    if args.antipattern:
+        show("antipattern", "antipattern", args.source.split(",") if args.source else None)
+        done = True
+    if args.master:
+        show("narrative", "master_style")
+        done = True
     if not done:
         ap.error("至少给 --rhetoric / --imagery / --transition / --voice / --pacing / --dialogue / --opening / --action / --suspense / --scene / --comedy 之一")
 
