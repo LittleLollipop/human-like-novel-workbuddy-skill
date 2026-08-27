@@ -144,13 +144,18 @@ def file_pacing(name=None):
     items = []
     for key, s in data["macro"].items():
         if not name or name in key or name in s["label"]:
-            items.append((s["label"], s.get("level", ""), s.get("beats", [])))
+            items.append((s["label"], s.get("level", ""), s.get("beats", []), s.get("note", "")))
+    if not name or "meso" in name or not items:
+        m = data.get("meso", {})
+        items.append((m.get("label", "中式笔法节奏"), m.get("level", "chapter/segment"), [], m.get("note", "")))
     if not name or "micro" in name or not items:
         m = data.get("micro", {})
-        items.append((m.get("label", "章节级节奏规则"), "chapter", []))
+        items.append((m.get("label", "章节级节奏规则"), "chapter", [], ""))
     print(f"【叙事节奏】（文件版）{len(items)} 个体系")
-    for label, level, beats in items:
+    for label, level, beats, note in items:
         print(f"\n■ {label}｜层级：{level}")
+        if note:
+            print(f"  注：{note}")
         for i, b in enumerate(beats, 1):
             print(f"  {i}. {b.get('name','')}（{b.get('pos','')}）：{b.get('purpose','')}")
 
@@ -379,7 +384,7 @@ def main():
     ap.add_argument("--imagery", nargs="?", const="", help="物象查询，逗号分隔（空=全表）")
     ap.add_argument("--transition", action="store_true", help="全部转场手法")
     ap.add_argument("--voice", action="store_true", help="声口语料")
-    ap.add_argument("--pacing", nargs="?", const="", help="叙事节奏体系（救猫咪/故事圈/三幕/七点/弗莱塔格/英雄之旅/微观；空=全部）")
+    ap.add_argument("--pacing", nargs="?", const="", help="叙事节奏体系（救猫咪/故事圈/三幕/七点/弗莱塔格/英雄之旅/特鲁比/沃格勒/女英雄/起承转合/meso 中式笔法/micro 微观；空=全部）")
     ap.add_argument("--dialogue", action="store_true", help="对话技术手法")
     ap.add_argument("--opening", action="store_true", help="开篇/黄金三章手法")
     ap.add_argument("--action", action="store_true", help="战斗动作手法")

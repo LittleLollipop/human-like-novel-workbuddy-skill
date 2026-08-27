@@ -35,6 +35,18 @@ def main():
             "beats": json.dumps(sysinfo.get("beats", []), ensure_ascii=False),
         })
         n += 1
+    # 中观规则（中式笔法节奏）
+    meso = data.get("meso", {})
+    mg.upsert_vertex({
+        "id": "pacing_meso", "type": "pacing", "status": "live", "domain": "lexicon",
+        "label": meso.get("label", "中式笔法节奏"),
+        "name": "meso",
+        "level": meso.get("level", "chapter/segment"),
+        "source": meso.get("source", ""),
+        "note": meso.get("note", ""),
+        "rules": json.dumps(meso.get("rules", []), ensure_ascii=False),
+    })
+    n += 1
     # 微观规则
     micro = data.get("micro", {})
     mg.upsert_vertex({
@@ -42,12 +54,13 @@ def main():
         "label": micro.get("label", "章节级节奏规则"),
         "name": "micro",
         "level": "chapter",
+        "source": micro.get("source", ""),
         "rules": json.dumps(micro.get("rules", []), ensure_ascii=False),
     })
     n += 1
 
     mg.close()
-    print(f"✅ 节奏库导入完成: {n} 节点（宏观 {len(data['macro'])} 体系 + 微观规则）")
+    print(f"✅ 节奏库导入完成: {n} 节点（宏观 {len(data['macro'])} 体系 + 中观 + 微观规则）")
 
 
 if __name__ == "__main__":
