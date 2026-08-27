@@ -31,6 +31,7 @@ def main():
             "id": f"allusion_{t['name']}", "type": "allusion", "status": "live", "domain": "lexicon",
             "label": f"典故·{t['name']}", "name": t["name"],
             "sub_type": t.get("type", "成语典故"),
+            "region": t.get("region", "中国"),
             "source": t.get("source", ""),
             "story": t.get("story", ""),
             "meaning": t.get("meaning", ""),
