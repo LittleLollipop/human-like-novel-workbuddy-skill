@@ -141,6 +141,14 @@ def analyze(lines, text, rules=None):
             else:
                 warns.append(f"[AI味·统计] 冗余密度 {pct}%（用词层，基准≈10%；结构型废话需人工补）")
 
+    # 2.10 AI 第一人称情绪模板（'心里+X'，2026-08-28 加——朱雀验证负面）
+    et = st.get("emotion_templates")
+    if et:
+        et_hits = [(w, text.count(w)) for w in et.get("words", []) if text.count(w)]
+        et_total = sum(c for _, c in et_hits)
+        if et_total > et["max"]:
+            warns.append(f"[AI味·提示⚠️] 第一人称情绪模板『心里+X』{et_total} 次（上限{et['max']}）：{', '.join(f'{w}×{c}' for w,c in et_hits)} → {et['fix']}")
+
     return errs, warns
 
 
