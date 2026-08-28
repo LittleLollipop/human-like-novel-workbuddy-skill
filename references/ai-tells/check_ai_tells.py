@@ -128,6 +128,19 @@ def analyze(lines, text, rules=None):
         if c > da["max"]:
             warns.append(f"[AI味·提示⚠️] 动作短语重复「{w}」×{c}（上限{da['max']}）→ {da['fix']}")
 
+    # 2.9 冗余密度（用词层，2026-08-28 加——信息密度过高=AI 指纹）
+    rd = st.get("redundancy")
+    if rd:
+        rd_words = rd.get("words", [])
+        sents_all = split_sents(text)
+        if sents_all:
+            rd_sents = sum(1 for s in sents_all if any(w in s for w in rd_words))
+            pct = rd_sents * 100 // len(sents_all)
+            if pct < rd["min_pct"]:
+                warns.append(f"[AI味·提示⚠️] 冗余密度 {pct}%（<{rd['min_pct']}%=信息密度过高，人类口述≈10%）→ {rd['fix']}")
+            else:
+                warns.append(f"[AI味·统计] 冗余密度 {pct}%（用词层，基准≈10%；结构型废话需人工补）")
+
     return errs, warns
 
 
