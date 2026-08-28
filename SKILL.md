@@ -795,6 +795,7 @@ AI生成的正文往往"平淡"、"匀速"、"没有重点"，因为AI不知道�
 
 **词图说明**（`references/word-graph/`）：
 - `lexicon.axeb`：图库真源（词 45k / 语义类 9,988 / belongs_to 边 55k；8 维度 43 锚点（情绪14/场景9/人物3/动作4/环境3/时令3/器物4/感官3）；句式范式 30）。重建：`python3 import_cilin.py`（词林 txt + seed-map 导入）+ `python3 import_syntax.py`（句式范式导入）
+- **生造词自检**（2026-08-29 用户方案 B 落地）：`python3 references/word-graph/check_vocab.py <章节文件> --book-dir <历史章节目录> --whitelist <角色,地名,组织>`——分词去「词林（同义词词林扩展版 45k）+ 成语 30k + jieba 词典 + 本书词表」匹配，未命中=AI 生造/缩略词候选（提示级，机器筛人判）。切碎型生造词（腌人/价不还）看 B 单字区列表人扫。
 - **可累积**：踩到好词往情绪/场景锚点补 seed_of 边，或往 `word-injector/seed-map.json` 补种子后重导；句式范式往 `syntax-patterns.json` 加后重导
 
 ---
