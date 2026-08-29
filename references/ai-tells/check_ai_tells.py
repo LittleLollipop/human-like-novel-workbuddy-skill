@@ -38,15 +38,28 @@ def analyze(lines, text, rules=None):
         rules = load_rules()
     errs, warns = [], []
 
-    # ── 1. 硬禁（确定性词，出现即报错） ──
+    # ── 1. 硬禁（确定性词/模式，出现即报错；pattern 型带 negate 豁免） ──
     hard_hits = 0
     for b in rules["hard_bans"]:
-        for i, ln in enumerate(lines, 1):
-            if b["word"] in ln:
-                hard_hits += 1
-                errs.append(f"[AI味·硬禁❌] L{i}: 「{b['word']}」→ {b['fix']}（{b.get('source','')}）")
+        if "pattern" in b:
+            # 正则模式型（如『不是X，是Y』论断句）+ 豁免词（回忆冲突锚点/口语词）+ 对话层豁免（台词=角色语言风格）
+            pat = re.compile(b["pattern"])
+            negate = b.get("negate", [])
+            for i, ln in enumerate(lines, 1):
+                if pat.search(ln):
+                    if any(n in ln for n in negate):
+                        continue
+                    if "“" in ln or "”" in ln:
+                        continue  # 对话层豁免：台词内『不是X是Y』是角色语言风格（花少正反论断妙语）
+                    hard_hits += 1
+                    errs.append(f"[AI味·硬禁❌] L{i}: 命中「{b.get('why','')[:22]}…」→ {b['fix']}（{b.get('source','')}）")
+        else:
+            for i, ln in enumerate(lines, 1):
+                if b["word"] in ln:
+                    hard_hits += 1
+                    errs.append(f"[AI味·硬禁❌] L{i}: 「{b['word']}」→ {b['fix']}（{b.get('source','')}）")
     if hard_hits == 0:
-        errs.append("[AI味·硬禁✅] 模板时间词/概念化场景句：0 处")
+        errs.append("[AI味·硬禁✅] 模板时间词/概念化场景句/论断句：0 处")
 
     # ── 2. 统计报告（提示级） ──
     st = rules["stats"]
