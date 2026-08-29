@@ -31,19 +31,15 @@ def scan_threshold(text, rule):
     return []
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("用法: check_error_cases.py <章节文件>")
-        sys.exit(2)
-    path = sys.argv[1]
-    if not os.path.isfile(path):
-        print(f"文件不存在: {path}")
-        sys.exit(2)
-    rules = load_rules()
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
+def analyze(text, rules=None):
+    """可复用 API：返回 (rules_hits, total)。
+    rules_hits: [(rule, [(行号, 片段/说明), ...]), ...] 命中的规则列表
+    total: 总命中数
+    供项目机检 importlib 复用（单一权威源，不双实现）。
+    """
+    rules = rules or load_rules()
+    hits_all = []
     total = 0
-    print(f"=== error-cases 通用机检：{path} ===")
     for rule in rules:
         if rule["type"] == "regex":
             hits = scan_regex(text, rule)
@@ -53,13 +49,30 @@ def main():
             hits = []
         if hits:
             total += len(hits)
-            print(f"\n[{rule['id']}] {rule['name']}（{rule.get('severity','')}）命中 {len(hits)} 处")
-            for ln, frag in hits[:60]:
-                print(f"  L{ln}: {frag}")
-            if len(hits) > 60:
-                print(f"  … 其余 {len(hits)-60} 处略")
-            if rule.get("note"):
-                print(f"  注：{rule['note']}")
+            hits_all.append((rule, hits))
+    return hits_all, total
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("用法: check_error_cases.py <章节文件>")
+        sys.exit(2)
+    path = sys.argv[1]
+    if not os.path.isfile(path):
+        print(f"文件不存在: {path}")
+        sys.exit(2)
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    hits_all, total = analyze(text)
+    print(f"=== error-cases 通用机检：{path} ===")
+    for rule, hits in hits_all:
+        print(f"\n[{rule['id']}] {rule['name']}（{rule.get('severity','')}）命中 {len(hits)} 处")
+        for ln, frag in hits[:60]:
+            print(f"  L{ln}: {frag}")
+        if len(hits) > 60:
+            print(f"  … 其余 {len(hits)-60} 处略")
+        if rule.get("note"):
+            print(f"  注：{rule['note']}")
     if total == 0:
         print("\n=== 通用机检项全部干净 ===")
     else:
