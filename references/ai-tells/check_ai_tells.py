@@ -149,6 +149,56 @@ def analyze(lines, text, rules=None):
         if et_total > et["max"]:
             warns.append(f"[AI味·提示⚠️] 第一人称情绪模板『心里+X』{et_total} 次（上限{et['max']}）：{', '.join(f'{w}×{c}' for w,c in et_hits)} → {et['fix']}")
 
+    # 2.11 论断式判断句（不是X，是Y——2026-08-29 ch34 加）
+    js = st.get("judge_sentence")
+    if js:
+        hits = re.findall(js["pattern"], text)
+        if len(hits) > js["max"]:
+            warns.append(f"[AI味·提示⚠️] 论断式判断句『不是…是…』{len(hits)} 处（上限{js['max']}）→ {js['fix']}")
+
+    # 2.12 比喻连接词密度（像是/像/仿佛——2026-08-29 ch34 加）
+    sw = st.get("simile_words")
+    if sw:
+        sw_hits = [(w, text.count(w)) for w in sw["words"] if text.count(w)]
+        sw_total = sum(c for _, c in sw_hits)
+        if sw_total > sw["max"]:
+            warns.append(f"[AI味·提示⚠️] 比喻连接词 {sw_total} 次（上限{sw['max']}）：{', '.join(f'{w}×{c}' for w,c in sw_hits)} → {sw['fix']}")
+
+    # 2.13 X得发X 生造搭配（绿得发幽——2026-08-29 ch34 加）
+    df = st.get("de_fa_pattern")
+    if df:
+        allow = set(df["allow"])
+        df_hits = []
+        for m in re.finditer(df["pattern"], text):
+            tail = m.group(0)[-2:]
+            if tail not in allow:
+                df_hits.append(f"「{m.group(0)}」")
+        if df_hits:
+            warns.append(f"[AI味·提示⚠️] X得发X 生造搭配 {len(df_hits)} 处：{'、'.join(df_hits[:8])} → {df['fix']}")
+
+    # 2.14 情绪身体扫描词（手脚冰凉/心口一沉——2026-08-29 ch34 加，#074 同族）
+    bs = st.get("body_scan")
+    if bs:
+        bs_hits = [(w, text.count(w)) for w in bs["words"] if text.count(w)]
+        bs_total = sum(c for _, c in bs_hits)
+        if bs_total > bs["max"]:
+            warns.append(f"[AI味·提示⚠️] 情绪身体扫描 {bs_total} 处（上限{bs['max']}）：{', '.join(f'{w}×{c}' for w,c in bs_hits)} → {bs['fix']}")
+
+    # 2.15 同字重叠副词（XX地——2026-08-29 ch34 加）
+    da2 = st.get("dup_adv")
+    if da2:
+        adv_hits = re.findall(da2["pattern"], text)
+        if len(adv_hits) > da2["max"]:
+            warned = "、".join(f"{w}{w}地" for w in adv_hits[:12])
+            warns.append(f"[AI味·提示⚠️] 同字重叠副词 {len(adv_hits)} 处（上限{da2['max']}）：{warned} → {da2['fix']}")
+
+    # 2.16 见过X见过X没见过 排比（2026-08-29 ch34 加）
+    et2 = st.get("enum_turn")
+    if et2:
+        hits = re.findall(et2["pattern"], text)
+        if len(hits) > et2["max"]:
+            warns.append(f"[AI味·提示⚠️] 『见过…见过…没见过』排比 {len(hits)} 处（上限{et2['max']}）→ {et2['fix']}")
+
     return errs, warns
 
 
