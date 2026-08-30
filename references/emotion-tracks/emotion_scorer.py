@@ -150,6 +150,24 @@ def _dialog_ratio(text):
     return (qc / hz) if hz else 0.0
 
 
+# 语气词（口语语调的书面指纹，v5 对话语调密度用）
+_MODAL_WORDS = ["吧", "吗", "呢", "嘛", "呀", "啦", "哦", "唉", "哟", "嗯", "哼",
+                "啊", "哈", "嘿", "哎", "呸", "喽", "咯", "嘞", "呗", "咩", "哇", "喔"]
+
+
+def _dialog_text(text):
+    """提取引号内对话文本（仅对话内容，不含叙述）"""
+    out = []
+    in_q = False
+    for ch in text:
+        if ch in "\u201c\u201d":
+            in_q = not in_q
+            continue
+        if in_q:
+            out.append(ch)
+    return "".join(out)
+
+
 def _non_chars(cfg):
     """非主角称呼表：config 可配（每本书角色不同），缺省回退硬编码表"""
     return cfg.get("non_chars") or _NON_MAIN_HINTS
@@ -300,10 +318,26 @@ def score_section(text, cfg, mode):
             s_ev[name] = hits[:4]
     structure = min(s_score, W["structure"]) * discount
 
-    # dialog × discount
-    dr = _dialog_ratio(text)
-    dialog_raw = min(W["dialog"], W["dialog"] * (dr / mod["dialog_target"]))
-    dialog = dialog_raw * discount
+    # dialog：对话语调密度 × discount（v5 2026-08-31：武戏不豁免——对话维度=语调标记密度，非占比）
+    # 原理：语言靠语调承载情绪，文本的语调=标点（！/？/……）+语气词+短句节奏。
+    # 武戏对话少但每句满格（感叹+短句），密度反而高——用密度而非占比，武戏不再被冤枉。
+    dtxt = _dialog_text(text)
+    dhz = len([c for c in dtxt if "\u4e00" <= c <= "\u9fff"])
+    if dhz == 0:
+        dialog = 0.0
+        dr = 0.0
+    else:
+        excl = dtxt.count("！")
+        ques = dtxt.count("？")
+        ell = dtxt.count("……")
+        modal = sum(dtxt.count(m) for m in _MODAL_WORDS)
+        segs = re.split(r"[。！？…；，、\s]", dtxt)
+        short = sum(1 for s in segs if 1 <= len([c for c in s if "\u4e00" <= c <= "\u9fff"]) <= 8)
+        density = (excl + ques + ell + modal + short) / dhz * 100
+        dr = round(density, 1)
+        tgt = mod.get("dialog_tone_target", 25)  # 基准：每百字对话的语调标记数
+        dialog_raw = min(W["dialog"], W["dialog"] * (density / tgt))
+        dialog = dialog_raw * discount
 
     # purity：主情绪占比
     purity_ratio = main_hits / total_emo
@@ -374,7 +408,7 @@ def main():
         if ev["structure_ev"]:
             sev = "; ".join(f"{k}:{','.join(w for w, _ in v[:3])}" for k, v in ev["structure_ev"].items())
             print(f"  结构信号: {sev}")
-        print(f"  对话占比: {ev['dialog_ratio']*100:.0f}%")
+        print(f"  对话语调密度: {ev['dialog_ratio']:.1f}/百字（基准 {cfg['modes'][mode].get('dialog_tone_target', 25)}）")
 
 
 if __name__ == "__main__":
