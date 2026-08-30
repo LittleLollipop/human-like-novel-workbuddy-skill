@@ -150,6 +150,11 @@ def _dialog_ratio(text):
     return (qc / hz) if hz else 0.0
 
 
+def _non_chars(cfg):
+    """非主角称呼表：config 可配（每本书角色不同），缺省回退硬编码表"""
+    return cfg.get("non_chars") or _NON_MAIN_HINTS
+
+
 def _speaker_of(line, cfg):
     if "“" not in line and "”" not in line:
         return None
@@ -157,7 +162,7 @@ def _speaker_of(line, cfg):
     for mc in main_chars:
         if mc in line and re.search(rf"{mc}.{{0,8}}?({_TALK_VERBS})", line):
             return "main"
-    for hint in _NON_MAIN_HINTS:
+    for hint in _non_chars(cfg):
         if hint in line:
             return "non"
     for m in _PRE.finditer(line):
@@ -186,7 +191,7 @@ def _subject_of(line, cfg):
             continue  # 代词不判 main（"他得意地晃着叉子"描述对手也用他）
         if mc in line:
             return "main"
-    for hint in _NON_MAIN_HINTS:
+    for hint in _non_chars(cfg):
         if hint in line:
             return "non"
     return None
